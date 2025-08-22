@@ -22,6 +22,7 @@ import { LinksInput } from "@/components/ui/links-input";
 import { EmailsInput } from "@/components/ui/emails-input";
 import { getAISuggestions } from "@/lib/ai-assistance";
 import type { AISuggestions } from "@/lib/ai-assistance";
+import { sendMarketingRequestEmail } from "@/lib/email";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
 const marketingRequestSchema = z.object({
@@ -37,6 +38,10 @@ const marketingRequestSchema = z.object({
   ccEmails: z
     .array(z.string().email("Please enter valid email addresses"))
     .optional(),
+  contactEmail: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(1, "Contact email is required"),
   targeting: z
     .string()
     .min(10, "Please describe your target audience (minimum 10 characters)"),
@@ -78,6 +83,7 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
     mode: "onChange",
     defaultValues: {
       activityType: "once-off",
+      contactEmail: user?.email || "",
     },
   });
 
@@ -102,11 +108,55 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
     setValue("measurement", newSelections);
   };
 
+  const demoData: MarketingRequestData = {
+    background:
+      "We're launching a new AI-powered project management tool and need to increase brand awareness among tech startups and small businesses. Our current market presence is limited, and we want to establish ourselves as a thought leader in the productivity space. The tool has unique features like smart task prioritization and automated workflow suggestions.",
+    objectives:
+      "1. Generate 500 qualified leads within 3 months\n2. Increase brand awareness by 40% in our target market\n3. Achieve 10,000 website visitors per month\n4. Build an email list of 2,000 subscribers\n5. Generate $50,000 in new revenue from the campaign",
+    measurement: [
+      "Lead Generation",
+      "Website Traffic",
+      "Brand Awareness",
+      "Conversion Rate",
+      "Email Open/Click Rates",
+    ],
+    ccEmails: [],
+    contactEmail: "demo@teampps.com.au",
+    targeting:
+      "Tech-savvy entrepreneurs and small business owners (25-45 years old) who manage teams of 5-50 people. They're looking for productivity solutions and are comfortable with cloud-based tools. Primary focus on startup hubs like San Francisco, Austin, and remote-first companies.",
+    examples:
+      "I really like how Notion does their content marketing - they create educational content that shows the product in action. Also impressed by Monday.com's user-generated content campaigns and how they showcase real customer success stories.",
+    exampleLinks: [
+      "https://notion.so/blog",
+      "https://monday.com/success-stories",
+    ],
+    actionSteps:
+      "See LinkedIn ad → Visit landing page → Download free productivity guide → Sign up for product demo → Start free trial → Convert to paid subscription",
+    activityType: "broader-campaign" as const,
+    preferredChannels: [
+      "LinkedIn Ads",
+      "Content Marketing",
+      "Email Marketing",
+      "Webinars",
+      "SEO",
+    ],
+    timeline: "3 months with potential to extend if successful",
+    budget:
+      "$25,000 total campaign budget ($15k for ads, $10k for content creation)",
+  };
+
+  const fillDemoData = () => {
+    Object.entries(demoData).forEach(([key, value]) => {
+      setValue(key as keyof MarketingRequestData, value);
+    });
+  };
+
   const onSubmit = async (data: MarketingRequestData) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
+      // Save to database
       const { error: submitError } = await supabase.from("form_data").insert({
         data: {
           formId: "marketing-request",
@@ -118,6 +168,19 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
       });
 
       if (submitError) throw submitError;
+
+      // Send email notification - critical step, fail if email fails
+      const emailResult = await sendMarketingRequestEmail({
+        ...data,
+        submittedBy: user?.email || "Unknown user",
+        submittedAt: new Date().toISOString(),
+      });
+
+      if (!emailResult.success) {
+        throw new Error(
+          "Failed to send email notification. Please try again or contact admin."
+        );
+      }
 
       setIsSubmitted(true);
       reset();
@@ -140,10 +203,12 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
             <div className="text-center">
               <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
               <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Form Submitted!
+                Form Submitted Successfully!
               </h2>
               <p className="text-gray-600 mb-6">
-                Thank you for your submission.
+                Your marketing request has been submitted and email
+                notifications have been sent. You should receive a confirmation
+                copy shortly.
               </p>
               <Button onClick={onBack} className="w-full">
                 Back to Forms
@@ -180,7 +245,7 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardHeader>
             <CardTitle>Marketing Request</CardTitle>
@@ -325,17 +390,12 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
               {/* CC Emails */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>CC for Review/Comments</Label>
+                  <Label>DO you want to copy anyone in review/comments?</Label>
                   <HelpButton
                     help={[
                       "Add email addresses of people you want to CC for review and comments",
                       "These people will receive notifications about this marketing request",
                       "Optional - only add if you need specific stakeholders to be involved",
-                    ]}
-                    examples={[
-                      "stakeholder@company.com",
-                      "manager@company.com",
-                      "team-lead@company.com",
                     ]}
                   />
                 </div>
@@ -662,6 +722,33 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                 </>
               )}
 
+              {/* Contact Email */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="contactEmail">
+                    Your Contact Email
+                    <span className="text-red-500 ml-1">*</span>
+                  </Label>
+                  <HelpButton
+                    help={[
+                      "Your email address will be used for correspondence on this marketing request.",
+                    ]}
+                    examples={["your.work@company.com"]}
+                  />
+                </div>
+                <Input
+                  id="contactEmail"
+                  type="email"
+                  placeholder="your.email@company.com"
+                  {...register("contactEmail")}
+                />
+                {errors.contactEmail && (
+                  <p className="text-sm text-red-600">
+                    {errors.contactEmail.message}
+                  </p>
+                )}
+              </div>
+
               {/* Submission Info */}
               <Disclosure
                 content={[
@@ -680,6 +767,16 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                 >
                   Cancel
                 </Button>
+                {import.meta.env.DEV && (
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={fillDemoData}
+                    className="flex-shrink-0"
+                  >
+                    Fill Demo Data
+                  </Button>
+                )}
                 <div className="flex-1">
                   <Button
                     type="submit"
