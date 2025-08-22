@@ -1,8 +1,79 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { 
+  FormSummarisationResponse 
+} from "../_shared/ai-types.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')
+
+// Helper function to call Anthropic API for form summarization
+async function generateFormSummary(formData: MarketingRequestEmailData): Promise<FormSummarisationResponse | null> {
+  if (!ANTHROPIC_API_KEY) {
+    console.warn('ANTHROPIC_API_KEY not configured, skipping AI summary')
+    return null
+  }
+
+  try {
+    const systemPrompt = `You are an expert at analyzing marketing request forms and extracting key insights.
+
+    Analyze the provided form content and create a comprehensive summary.
+    
+    Respond with a JSON object containing:
+    - summary: concise overview of the marketing request (2-3 sentences)
+    - keyPoints: array of 3-5 most important points from the form
+    - insights: array of 2-3 strategic insights or observations
+    - confidence: number between 0-100 indicating confidence in the analysis
+    
+    Focus on extracting meaningful information that would be useful for decision-making.`
+
+    const userMessage = `Marketing request form to analyze: ${JSON.stringify(formData, null, 2)}`
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 500,
+        system: systemPrompt,
+        messages: [
+          { role: 'user', content: userMessage }
+        ],
+      }),
+    })
+
+    if (!response.ok) {
+      console.error('Anthropic API error:', response.status, response.statusText)
+      return null
+    }
+
+    const data = await response.json()
+    const aiResponse = data.content[0]?.text || ''
+    
+    try {
+      const parsed = JSON.parse(aiResponse)
+      return {
+        type: 'form-summarisation',
+        summary: parsed.summary || 'Marketing request analyzed.',
+        keyPoints: parsed.keyPoints || [],
+        insights: parsed.insights || [],
+        confidence: parsed.confidence || 75
+      }
+    } catch (parseError) {
+      console.error('Failed to parse AI response:', parseError)
+      return null
+    }
+  } catch (error) {
+    console.error('Error generating AI summary:', error)
+    return null
+  }
 }
 
 interface MarketingRequestEmailData {
@@ -23,7 +94,7 @@ interface MarketingRequestEmailData {
   submittedAt: string;
 }
 
-function generateEmailContent(data: MarketingRequestEmailData): string {
+function generateEmailContent(data: MarketingRequestEmailData, aiSummary?: FormSummarisationResponse | null): string {
   const {
     background,
     objectives,
@@ -56,6 +127,14 @@ function generateEmailContent(data: MarketingRequestEmailData): string {
         .list-item { background: #f3f4f6; padding: 8px; margin: 5px 0; border-radius: 4px; }
         .activity-type { background: #dbeafe; color: #1e40af; padding: 10px; border-radius: 6px; font-weight: bold; text-align: center; }
         .campaign-details { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; }
+        .ai-summary { background: #f0f9ff; border-left: 4px solid #0ea5e9; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .ai-summary h3 { margin-top: 0; color: #0c4a6e; display: flex; align-items: center; }
+        .ai-summary .confidence { background: #e0f2fe; color: #0c4a6e; padding: 4px 8px; border-radius: 12px; font-size: 12px; margin-left: 10px; }
+        .key-points { display: grid; gap: 8px; margin: 15px 0; }
+        .key-point { background: #ffffff; padding: 10px; border-radius: 6px; border-left: 3px solid #0ea5e9; }
+        .insights { background: #ecfdf5; border-radius: 6px; padding: 12px; margin: 10px 0; }
+        .insights h4 { margin: 0 0 8px 0; color: #065f46; }
+        .insight-item { color: #047857; margin: 5px 0; }
         .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280; }
         a { color: #2563eb; text-decoration: none; }
         a:hover { text-decoration: underline; }
@@ -70,6 +149,32 @@ function generateEmailContent(data: MarketingRequestEmailData): string {
       <div class="activity-type">
         ${activityType === 'broader-campaign' ? '📊 Broader Targeted Campaign' : '⚡ Once Off Activity'}
       </div>
+
+      ${aiSummary ? `
+        <div class="ai-summary">
+          <h3>🤖 AI Analysis<span class="confidence">${aiSummary.confidence}% confidence</span></h3>
+          
+          <div class="field-value">
+            <strong>Summary:</strong> ${aiSummary.summary}
+          </div>
+          
+          ${aiSummary.keyPoints.length > 0 ? `
+            <div>
+              <strong>Key Points:</strong>
+              <div class="key-points">
+                ${aiSummary.keyPoints.map(point => `<div class="key-point">• ${point}</div>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          ${aiSummary.insights.length > 0 ? `
+            <div class="insights">
+              <h4>💡 Strategic Insights:</h4>
+              ${aiSummary.insights.map(insight => `<div class="insight-item">• ${insight}</div>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
 
       <div class="section">
         <div class="section-title">Background & Context</div>
@@ -148,7 +253,18 @@ serve(async (req) => {
 
   try {
     const data: MarketingRequestEmailData = await req.json()
-    const emailContent = generateEmailContent(data)
+    
+    // Generate AI summary of the form data
+    console.log('Generating AI summary for marketing request...')
+    const aiSummary = await generateFormSummary(data)
+    
+    if (aiSummary) {
+      console.log('AI summary generated successfully with confidence:', aiSummary.confidence)
+    } else {
+      console.log('AI summary generation failed or skipped')
+    }
+    
+    const emailContent = generateEmailContent(data, aiSummary)
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     if (!resendApiKey) {
@@ -158,11 +274,14 @@ serve(async (req) => {
     // Combine CC emails with user's contact email
     const allCcEmails = [...(data.ccEmails || []), data.contactEmail];
     
+    const subjectPrefix = aiSummary ? '🤖 ' : ''
+    const activityTypeText = data.activityType === 'broader-campaign' ? 'Campaign' : 'Activity'
+    
     const emailPayload = {
       from: 'Genie Form <noreply@mail.teampps.com.au>',
       to: ['tbikaun@teampps.com.au'],
       cc: allCcEmails,
-      subject: `New Marketing Request: ${data.activityType === 'broader-campaign' ? 'Campaign' : 'Activity'}`,
+      subject: `${subjectPrefix}New Marketing Request: ${activityTypeText}`,
       html: emailContent,
     }
 
