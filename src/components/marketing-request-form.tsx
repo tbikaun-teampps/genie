@@ -5,6 +5,7 @@ import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -45,6 +46,9 @@ const marketingRequestSchema = z.object({
     .string()
     .min(10, "Please describe expected action steps (minimum 10 characters)"),
   activityType: z.enum(["once-off", "broader-campaign"]),
+  preferredChannels: z.array(z.string()).optional(),
+  timeline: z.string().optional(),
+  budget: z.string().optional(),
 });
 
 type MarketingRequestData = z.infer<typeof marketingRequestSchema>;
@@ -538,6 +542,125 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                   </div>
                 </div>
               </div>
+
+              {/* Conditional fields for broader campaign */}
+              {watch("activityType") === "broader-campaign" && (
+                <>
+                  {/* Preferred Channels */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>
+                        Are there any specific mediums, channels you'd like to
+                        use?
+                      </Label>
+                      <HelpButton
+                        help={[
+                          "Select the marketing channels that align with your target audience",
+                          "Consider where your audience is most active",
+                          "Add custom channels if your preferred option isn't listed",
+                        ]}
+                        examples={[
+                          "B2B: LinkedIn, Email, Webinars, Industry events",
+                          "B2C: Instagram, Facebook, Google Ads, Influencer partnerships",
+                          "Mixed: Content marketing, SEO, PR, Direct mail",
+                        ]}
+                      />
+                    </div>
+                    <MultiSelect
+                      options={[
+                        "Email Marketing",
+                        "Social Media (Organic)",
+                        "Paid Social Media",
+                        "Google Ads (Search)",
+                        "Google Ads (Display)",
+                        "Content Marketing",
+                        "SEO",
+                        "Webinars",
+                        "Events/Trade Shows",
+                        "PR/Media Relations",
+                        "Direct Mail",
+                        "Influencer Marketing",
+                        "Partnerships",
+                        "Retargeting/Remarketing",
+                        "Video Marketing",
+                      ]}
+                      value={watch("preferredChannels") || []}
+                      onChange={(value) => setValue("preferredChannels", value)}
+                      placeholder="Select preferred channels..."
+                      allowCustom={true}
+                    />
+                    {errors.preferredChannels && (
+                      <p className="text-sm text-red-600">
+                        {errors.preferredChannels.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="timeline">
+                        What timeline are you expecting for this?
+                      </Label>
+                      <HelpButton
+                        help={[
+                          "Consider campaign planning, content creation, and execution phases",
+                          "Factor in any key dates, product launches, or seasonal timing",
+                          "Be realistic about the time needed for quality execution",
+                        ]}
+                        examples={[
+                          "3 months (standard campaign)",
+                          "6 weeks (quick turnaround)",
+                          "Q2 2024 (quarterly campaign)",
+                          "By end of year (annual goal)",
+                          "Ongoing (evergreen campaign)",
+                        ]}
+                      />
+                    </div>
+                    <Input
+                      id="timeline"
+                      placeholder="e.g., 3 months, Q2 2024, by end of year"
+                      {...register("timeline")}
+                    />
+                    {errors.timeline && (
+                      <p className="text-sm text-red-600">
+                        {errors.timeline.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Budget */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="budget">What is the budget?</Label>
+                      <HelpButton
+                        help={[
+                          "Include total campaign budget including ad spend, content creation, and tools",
+                          "Provide a range if exact amount isn't determined",
+                          "Indicate if budget is monthly, quarterly, or total campaign",
+                        ]}
+                        examples={[
+                          "$10,000 total campaign budget",
+                          "$5k-15k (depending on scope)",
+                          "$2,000/month for 6 months",
+                          "TBD - need recommendations",
+                          "Under $25,000",
+                        ]}
+                      />
+                    </div>
+                    <Input
+                      id="budget"
+                      placeholder="e.g., $10,000, $50k-100k, TBD"
+                      {...register("budget")}
+                    />
+                    {errors.budget && (
+                      <p className="text-sm text-red-600">
+                        {errors.budget.message}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* Submission Info */}
               <Disclosure
