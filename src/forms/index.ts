@@ -1,14 +1,13 @@
-// Auto-export all forms
-export { marketingRequestForm } from "./marketing-request";
-
-// Form registry - automatically collects all exported forms
-import { marketingRequestForm } from "./marketing-request";
 import type { FormDefinition } from "@/lib/forms";
 
+// Simple form definitions for the forms list UI
+// Actual form logic is in dedicated components
 export const allForms: FormDefinition[] = [
-  // contactForm,
-  // feedbackForm,
-  // surveyForm,
-  // newsletterForm,
-  marketingRequestForm,
+  {
+    id: "marketing-request",
+    title: "Marketing Request",
+    description: "Submit a request for marketing activities and campaigns",
+    schema: {} as any, // Not used with dedicated components
+    fields: [], // Not used with dedicated components - just for display count
+  },
 ];

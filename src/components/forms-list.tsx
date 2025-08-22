@@ -71,8 +71,7 @@ export function FormsList({ onSelectForm }: FormsListProps) {
               </CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-600">
-                  {form.fields.length} field
-                  {form.fields.length !== 1 ? "s" : ""}
+                  {form.id === "marketing-request" ? "10 fields" : `${form.fields.length} field${form.fields.length !== 1 ? "s" : ""}`}
                 </div>
                 <Button
                   className="w-full mt-4"
