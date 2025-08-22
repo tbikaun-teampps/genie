@@ -15,10 +15,12 @@ export const marketingRequestForm: FormDefinition = {
     measurement: z
       .array(z.string())
       .min(1, "Please select at least one measurement method"),
+    ccEmails: z.array(z.string().email("Please enter valid email addresses")).optional(),
     targeting: z
       .string()
       .min(10, "Please describe your target audience (minimum 10 characters)"),
     examples: z.string().optional(),
+    exampleLinks: z.array(z.string().url("Please enter valid URLs")).optional(),
     actionSteps: z
       .string()
       .min(10, "Please describe expected action steps (minimum 10 characters)"),
@@ -94,6 +96,23 @@ export const marketingRequestForm: FormDefinition = {
       ],
     },
     {
+      name: "ccEmails",
+      label: "CC for Review/Comments",
+      type: "emails",
+      placeholder: "name@example.com",
+      required: false,
+      help: [
+        "Add email addresses of people you want to CC for review and comments",
+        "These people will receive notifications about this marketing request",
+        "Optional - only add if you need specific stakeholders to be involved"
+      ],
+      examples: [
+        "stakeholder@company.com",
+        "manager@company.com", 
+        "team-lead@company.com"
+      ],
+    },
+    {
       name: "targeting",
       label: "Who are we targeting with this marketing activity?",
       type: "textarea",
@@ -117,18 +136,36 @@ export const marketingRequestForm: FormDefinition = {
       name: "examples",
       label: "Have you seen this marketing activity being used before? (optional)",
       type: "textarea",
-      placeholder: "Share examples, references, web URLs, or inspiration...",
+      placeholder: "Describe examples, creative concepts, or inspiration you've seen...",
       required: false,
       help: [
         "This helps us understand your preferences and avoid reinventing the wheel",
-        "Include URLs if possible",
-        "Mention what specifically you liked about the examples"
+        "Describe what specifically you liked about the examples",
+        "Add any relevant links in the section below"
       ],
       examples: [
-        "Links to campaigns you admire",
-        "Competitor examples worth studying",
-        "Industry case studies",
-        "Creative concepts or formats you've seen work well"
+        "Competitor campaigns you admire",
+        "Industry case studies or best practices",
+        "Creative concepts or formats you've seen work well",
+        "Specific tactics or messaging approaches"
+      ],
+    },
+    {
+      name: "exampleLinks",
+      label: "Reference Links",
+      type: "links",
+      placeholder: "https://example.com/campaign",
+      required: false,
+      help: [
+        "Add links to campaigns, case studies, or examples you mentioned above",
+        "Include any competitor examples or inspiration sources",
+        "Links help the team understand your vision better"
+      ],
+      examples: [
+        "Campaign landing pages you admire",
+        "Competitor marketing examples",
+        "Industry articles or case studies",
+        "Creative portfolios or inspiration sites"
       ],
     },
     {
@@ -148,6 +185,19 @@ export const marketingRequestForm: FormDefinition = {
         "Read email → Click to website → Add to cart → Purchase",
         "View social post → Follow account → Sign up for newsletter",
         "Watch video → Visit website → Request quote → Become customer"
+      ],
+    },
+    {
+      name: "submission-info",
+      label: "Before You Submit",
+      type: "disclosure",
+      variant: "info",
+      content: [
+        "Your marketing request will be automatically posted to the Marketing team's Microsoft Teams channel for review and assignment.",
+        // "⏱️ You can expect an initial response within 1-2 business days.",
+        // "📞 A team member may contact you for additional clarification or to schedule a brief planning session.",
+        // "🔄 You'll receive updates on your request's progress via email and Teams notifications.",
+        // "📊 All approved requests will be tracked in our project management system with regular status updates."
       ],
     },
   ],

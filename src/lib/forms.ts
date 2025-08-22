@@ -11,7 +11,7 @@ export interface FormDefinition {
 export interface FormField {
   name: string;
   label: string;
-  type: "text" | "email" | "number" | "textarea" | "select" | "multiselect";
+  type: "text" | "email" | "number" | "textarea" | "select" | "multiselect" | "disclosure" | "links" | "emails";
   placeholder?: string;
   options?: string[];
   required?: boolean;
@@ -20,4 +20,6 @@ export interface FormField {
   help?: string[];
   examples?: string[];
   aiAssistance?: boolean;
+  content?: string[]; // For disclosure type - array of content lines
+  variant?: "info" | "warning" | "success"; // Visual variant for disclosure
 }

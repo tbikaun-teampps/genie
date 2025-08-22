@@ -17,6 +17,9 @@ import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { HelpButton } from "@/components/ui/popover";
 import { AIButton } from "@/components/ui/ai-button";
+import { Disclosure } from "@/components/ui/disclosure";
+import { LinksInput } from "@/components/ui/links-input";
+import { EmailsInput } from "@/components/ui/emails-input";
 import { getAISuggestions } from "@/lib/ai-assistance";
 import type { AISuggestions } from "@/lib/ai-assistance";
 import { ArrowLeft, CheckCircle } from "lucide-react";
@@ -38,12 +41,13 @@ export function DynamicForm({ form, onBack }: DynamicFormProps) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid },
     reset,
     watch,
     setValue,
   } = useForm({
     resolver: zodResolver(form.schema as never),
+    mode: "onChange", // Enable validation on change for real-time feedback
   });
 
   const handleAIAssistance = async (fieldName: string) => {
@@ -123,7 +127,7 @@ export function DynamicForm({ form, onBack }: DynamicFormProps) {
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             <Button
               variant="ghost"
@@ -159,79 +163,101 @@ export function DynamicForm({ form, onBack }: DynamicFormProps) {
 
               {form.fields.map((field) => (
                 <div key={field.name} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor={field.name}>
-                      {field.label}
-                      {field.required && (
-                        <span className="text-red-500 ml-1">*</span>
-                      )}
-                    </Label>
-                    <div className="flex items-center gap-2">
-                      {field.aiAssistance && (
-                        <AIButton
-                          onAssist={() => handleAIAssistance(field.name)}
-                          disabled={
-                            !watch("background") && !watch("objectives")
-                          }
-                        />
-                      )}
-                      {(field.help || field.examples) && (
-                        <HelpButton
-                          help={field.help}
-                          examples={field.examples}
-                        />
-                      )}
-                    </div>
-                  </div>
-
-                  {field.type === "textarea" ? (
-                    <textarea
-                      id={field.name}
-                      className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder={field.placeholder}
-                      {...register(field.name)}
-                    />
-                  ) : field.type === "select" ? (
-                    <select
-                      id={field.name}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      {...register(field.name)}
-                    >
-                      <option value="">Please select...</option>
-                      {field.options?.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  ) : field.type === "multiselect" ? (
-                    <MultiSelect
-                      options={field.options || []}
-                      value={watch(field.name) || []}
-                      onChange={(value) => setValue(field.name, value)}
-                      placeholder={field.placeholder}
-                      allowCustom={field.allowCustom}
-                      includeNotSure={field.includeNotSure}
-                      suggestedOptions={
-                        aiSuggestions[field.name]?.suggestedOptions || []
-                      }
-                      customSuggestions={
-                        aiSuggestions[field.name]?.customSuggestions || []
-                      }
+                  {field.type === "disclosure" ? (
+                    <Disclosure
+                      content={field.content || []}
+                      variant={field.variant}
+                      label={field.label}
                     />
                   ) : (
-                    <Input
-                      id={field.name}
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      {...register(field.name)}
-                    />
-                  )}
+                    <>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor={field.name}>
+                          {field.label}
+                          {field.required && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
+                        </Label>
+                        <div className="flex items-center gap-2">
+                          {field.aiAssistance && (
+                            <AIButton
+                              onAssist={() => handleAIAssistance(field.name)}
+                              disabled={
+                                !watch("background") && !watch("objectives")
+                              }
+                            />
+                          )}
+                          {(field.help || field.examples) && (
+                            <HelpButton
+                              help={field.help}
+                              examples={field.examples}
+                            />
+                          )}
+                        </div>
+                      </div>
 
-                  {errors[field.name] && (
-                    <p className="text-sm text-red-600">
-                      {errors[field.name]?.message as string}
-                    </p>
+                      {field.type === "textarea" ? (
+                        <textarea
+                          id={field.name}
+                          className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder={field.placeholder}
+                          {...register(field.name)}
+                        />
+                      ) : field.type === "select" ? (
+                        <select
+                          id={field.name}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          {...register(field.name)}
+                        >
+                          <option value="">Please select...</option>
+                          {field.options?.map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : field.type === "multiselect" ? (
+                        <MultiSelect
+                          options={field.options || []}
+                          value={watch(field.name) || []}
+                          onChange={(value) => setValue(field.name, value)}
+                          placeholder={field.placeholder}
+                          allowCustom={field.allowCustom}
+                          includeNotSure={field.includeNotSure}
+                          suggestedOptions={
+                            aiSuggestions[field.name]?.suggestedOptions || []
+                          }
+                          customSuggestions={
+                            aiSuggestions[field.name]?.customSuggestions || []
+                          }
+                        />
+                      ) : field.type === "links" ? (
+                        <LinksInput
+                          value={watch(field.name) || []}
+                          onChange={(links) => setValue(field.name, links)}
+                          placeholder={field.placeholder}
+                        />
+                      ) : field.type === "emails" ? (
+                        <EmailsInput
+                          value={watch(field.name) || []}
+                          onChange={(emails) => setValue(field.name, emails)}
+                          placeholder={field.placeholder}
+                        />
+                      ) : (
+                        <Input
+                          id={field.name}
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          {...register(field.name)}
+                        />
+                      )}
+
+                      {errors[field.name] && (
+                        <p className="text-sm text-red-600">
+                          {errors[field.name]?.message as string}
+                        </p>
+                      )}
+                    </>
                   )}
                 </div>
               ))}
@@ -245,13 +271,22 @@ export function DynamicForm({ form, onBack }: DynamicFormProps) {
                 >
                   Cancel
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="flex-1"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Form"}
-                </Button>
+                <div className="flex-1">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting || !isValid}
+                    className="w-full"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Form"}
+                  </Button>
+                  {!isValid &&
+                    !isSubmitting &&
+                    Object.keys(errors).length > 0 && (
+                      <p className="text-sm text-gray-500 mt-1 text-center">
+                        Please fix the errors above to submit
+                      </p>
+                    )}
+                </div>
               </div>
             </form>
           </CardContent>

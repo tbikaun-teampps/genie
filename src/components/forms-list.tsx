@@ -50,7 +50,7 @@ export function FormsList({ onSelectForm }: FormsListProps) {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">
             Available Forms
@@ -58,7 +58,7 @@ export function FormsList({ onSelectForm }: FormsListProps) {
           <p className="text-gray-600">Select a form to fill out below.</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {allForms.map((form) => (
             <Card
               key={form.id}
