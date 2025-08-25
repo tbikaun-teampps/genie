@@ -372,6 +372,49 @@ serve(async (req) => {
       // Don't fail the main request if action plan fails
     }
 
+    // After AI action plan, send Teams notification
+    try {
+      console.log("Sending Teams notification...");
+      
+      const teamsPayload = {
+        type: "marketing-request",
+        title: "New Marketing Request Submitted",
+        message: `A new ${data.activityType === "broader-campaign" ? "campaign" : "activity"} request has been submitted and processed with AI assistance.`,
+        formData: {
+          background: data.background,
+          objectives: data.objectives,
+          activityType: data.activityType,
+          submittedBy: data.submittedBy,
+          submittedAt: data.submittedAt,
+          targeting: data.targeting,
+          timeline: data.timeline,
+          budget: data.budget,
+        },
+      };
+
+      const teamsResponse = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/teams-webhook`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          },
+          body: JSON.stringify(teamsPayload),
+        }
+      );
+
+      if (teamsResponse.ok) {
+        console.log("Teams notification sent successfully");
+      } else {
+        const errorText = await teamsResponse.text();
+        console.error("Failed to send Teams notification:", errorText);
+      }
+    } catch (teamsError) {
+      console.error("Error sending Teams notification:", teamsError);
+      // Don't fail the main request if Teams notification fails
+    }
+
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
