@@ -23,7 +23,7 @@ import { EmailsInput } from "@/components/ui/emails-input";
 import { getObjectiveMeasurementsSuggestions } from "@/lib/ai-assistance";
 import type { ObjectiveMeasurementsOutput } from "@/types/ai-assistance";
 import { sendMarketingRequestEmail } from "@/lib/email";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Loader2 } from "lucide-react";
 import { demoData } from "./demo-data";
 import { ObjectiveMeasurementOptions } from "@/config/data";
 
@@ -746,6 +746,7 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                     disabled={isSubmitting || !isValid}
                     className="w-full"
                   >
+                    {isSubmitting && <Loader2 className="animate-spin" />}
                     {isSubmitting ? "Submitting..." : "Submit Form"}
                   </Button>
                   {!isValid &&

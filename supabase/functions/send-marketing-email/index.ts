@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { FormSummarisationResponse } from "../_shared/ai-types.ts";
+import { EMAIL_CONFIG } from "../_shared/email-config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,7 +12,7 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 
 // Helper function to call Anthropic API for form summarization
 async function generateFormSummary(
-  formData: MarketingRequestEmailData
+  formData: MarketingRequestEmailDatas
 ): Promise<FormSummarisationResponse | null> {
 
   if (!ANTHROPIC_API_KEY) {
@@ -316,8 +317,8 @@ serve(async (req) => {
       data.activityType === "broader-campaign" ? "Campaign" : "Activity";
 
     const emailPayload = {
-      from: "Genie Form <noreply@mail.teampps.com.au>",
-      to: ["tbikaun@teampps.com.au"],
+      from: EMAIL_CONFIG.FORM_FROM_ADDRESS,
+      to: [EMAIL_CONFIG.MARKETING_RECIPIENT],
       cc: allCcEmails,
       subject: `${subjectPrefix}New Marketing Request: ${activityTypeText}`,
       html: emailContent,
@@ -338,6 +339,38 @@ serve(async (req) => {
     }
 
     const result = await response.json();
+
+    // After successful email, trigger AI marketing action plan
+    try {
+      console.log("Triggering AI marketing action plan...");
+      
+      const actionPlanPayload = {
+        type: "marketing-action-plan",
+        formContent: data,
+      };
+
+      const actionPlanResponse = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-marketing-action-plan`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+          },
+          body: JSON.stringify(actionPlanPayload),
+        }
+      );
+
+      if (actionPlanResponse.ok) {
+        console.log("AI marketing action plan triggered successfully");
+      } else {
+        const errorText = await actionPlanResponse.text();
+        console.error("Failed to trigger AI marketing action plan:", errorText);
+      }
+    } catch (actionPlanError) {
+      console.error("Error triggering AI marketing action plan:", actionPlanError);
+      // Don't fail the main request if action plan fails
+    }
 
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
