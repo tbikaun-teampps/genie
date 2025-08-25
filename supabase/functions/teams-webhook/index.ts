@@ -46,8 +46,9 @@ Deno.serve(async (req) => {
 
     if (type === "marketing-request" && formData) {
       // Enhanced Adaptive Card for marketing requests
-      const cardColor = formData.activityType === "broader-campaign" ? "Attention" : "Good";
-      
+      const cardColor =
+        formData.activityType === "broader-campaign" ? "Attention" : "Good";
+
       teamsPayload = {
         type: "message",
         attachments: [
@@ -85,18 +86,27 @@ Deno.serve(async (req) => {
                     },
                     {
                       title: "🎯 Activity Type:",
-                      value: formData.activityType === "broader-campaign" 
-                        ? "📊 Broader Targeted Campaign" 
-                        : "⚡ Once Off Activity",
+                      value:
+                        formData.activityType === "broader-campaign"
+                          ? "📊 Broader Targeted Campaign"
+                          : "⚡ Once Off Activity",
                     },
-                    ...(formData.timeline ? [{
-                      title: "⏰ Timeline:",
-                      value: formData.timeline,
-                    }] : []),
-                    ...(formData.budget ? [{
-                      title: "💰 Budget:",
-                      value: formData.budget,
-                    }] : []),
+                    ...(formData.timeline
+                      ? [
+                          {
+                            title: "⏰ Timeline:",
+                            value: formData.timeline,
+                          },
+                        ]
+                      : []),
+                    ...(formData.budget
+                      ? [
+                          {
+                            title: "💰 Budget:",
+                            value: formData.budget,
+                          },
+                        ]
+                      : []),
                   ],
                 },
                 {
@@ -107,30 +117,40 @@ Deno.serve(async (req) => {
                 },
                 {
                   type: "TextBlock",
-                  text: `**Background:** ${formData.background.length > 200 ? formData.background.substring(0, 197) + "..." : formData.background}`,
+                  text: `**Background:** ${
+                    formData.background.length > 200
+                      ? formData.background.substring(0, 197) + "..."
+                      : formData.background
+                  }`,
                   wrap: true,
                   spacing: "Small",
                 },
                 {
                   type: "TextBlock",
-                  text: `**Objectives:** ${formData.objectives.length > 200 ? formData.objectives.substring(0, 197) + "..." : formData.objectives}`,
+                  text: `**Objectives:** ${
+                    formData.objectives.length > 200
+                      ? formData.objectives.substring(0, 197) + "..."
+                      : formData.objectives
+                  }`,
                   wrap: true,
                   spacing: "Small",
                 },
-                ...(formData.targeting ? [{
-                  type: "TextBlock",
-                  text: `**Target Audience:** ${formData.targeting.length > 150 ? formData.targeting.substring(0, 147) + "..." : formData.targeting}`,
-                  wrap: true,
-                  spacing: "Small",
-                }] : []),
+                ...(formData.targeting
+                  ? [
+                      {
+                        type: "TextBlock",
+                        text: `**Target Audience:** ${
+                          formData.targeting.length > 150
+                            ? formData.targeting.substring(0, 147) + "..."
+                            : formData.targeting
+                        }`,
+                        wrap: true,
+                        spacing: "Small",
+                      },
+                    ]
+                  : []),
               ],
-              actions: [
-                {
-                  type: "Action.OpenUrl",
-                  title: "📧 Check Email",
-                  url: "mailto:tbikaun@teampps.com.au",
-                },
-              ],
+              actions: [],
             },
           },
         ],
@@ -160,13 +180,17 @@ Deno.serve(async (req) => {
                   wrap: true,
                   spacing: "Small",
                 },
-                ...(data ? [{
-                  type: "FactSet",
-                  facts: Object.entries(data).map(([key, value]) => ({
-                    title: `${key}:`,
-                    value: String(value),
-                  })),
-                }] : []),
+                ...(data
+                  ? [
+                      {
+                        type: "FactSet",
+                        facts: Object.entries(data).map(([key, value]) => ({
+                          title: `${key}:`,
+                          value: String(value),
+                        })),
+                      },
+                    ]
+                  : []),
               ],
             },
           },
@@ -185,17 +209,19 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Teams webhook failed: ${response.status}`, errorText);
-      
+
       // Parse error to provide helpful guidance
       try {
         const errorData = JSON.parse(errorText);
         if (errorData?.error?.code === "WorkflowTriggerIsNotEnabled") {
-          throw new Error(`Teams webhook URL is invalid or workflow is deleted. Please update TEAMS_WEBHOOK_URL environment variable with a valid Teams incoming webhook URL.`);
+          throw new Error(
+            `Teams webhook URL is invalid or workflow is deleted. Please update TEAMS_WEBHOOK_URL environment variable with a valid Teams incoming webhook URL.`
+          );
         }
       } catch (parseError) {
         // If we can't parse the error, use the original message
       }
-      
+
       throw new Error(`Teams webhook failed: ${response.status} ${errorText}`);
     }
 

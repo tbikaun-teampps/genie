@@ -318,7 +318,8 @@ serve(async (req) => {
 
     const emailPayload = {
       from: EMAIL_CONFIG.FORM_FROM_ADDRESS,
-      to: [EMAIL_CONFIG.MARKETING_RECIPIENT],
+      to: EMAIL_CONFIG.TO_MARKETING_RECIPIENTS,
+      bcc: EMAIL_CONFIG.BCC_MARKETING_RECIPIENTS,
       cc: allCcEmails,
       subject: `${subjectPrefix}New Marketing Request: ${activityTypeText}`,
       html: emailContent,

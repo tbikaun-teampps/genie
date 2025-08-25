@@ -211,7 +211,8 @@ async function sendActionPlanEmail(
 
   const emailPayload = {
     from: EMAIL_CONFIG.FROM_ADDRESS,
-    to: [EMAIL_CONFIG.MARKETING_RECIPIENT],
+    to: EMAIL_CONFIG.TO_MARKETING_RECIPIENTS,
+    bcc: EMAIL_CONFIG.BCC_MARKETING_RECIPIENTS,
     subject: `🤖 AI Marketing Action Plan - ${actionPlan.priority.toUpperCase()} Priority`,
     html: emailContent,
   };
