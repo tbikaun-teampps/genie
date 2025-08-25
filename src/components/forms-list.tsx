@@ -1,6 +1,6 @@
 import { useAuth } from "@/lib/auth-context";
 import { allForms } from "@/forms";
-import type { FormDefinition } from "@/lib/forms";
+import type { FormDefinition } from "@/types/forms";
 import { Button } from "@/components/ui/button";
 import {
   Card,

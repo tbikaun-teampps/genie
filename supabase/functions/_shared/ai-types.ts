@@ -48,8 +48,6 @@ export interface ObjectiveMeasurementsResponse {
 export interface FormSummarisationResponse {
   type: 'form-summarisation';
   summary: string;
-  keyPoints: string[];
-  insights: string[];
   confidence: number;
 }
 

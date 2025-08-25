@@ -1,4 +1,4 @@
-import type { FormDefinition } from "@/lib/forms";
+import type { FormDefinition } from "@/types/forms";
 
 // Simple form definitions for the forms list UI
 // Actual form logic is in dedicated components

@@ -3,7 +3,7 @@ import { AuthProvider } from "./lib/auth-context";
 import { ProtectedRoute } from "./components/protected-route";
 import { FormsList } from "./components/forms-list";
 import { MarketingRequestForm } from "./components/marketing-request-form";
-import type { FormDefinition } from "./lib/forms";
+import type { FormDefinition } from "./types/forms";
 
 function App() {
   const [selectedForm, setSelectedForm] = useState<FormDefinition | null>(null);

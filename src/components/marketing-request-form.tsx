@@ -20,10 +20,12 @@ import { AIButton } from "@/components/ui/ai-button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { LinksInput } from "@/components/ui/links-input";
 import { EmailsInput } from "@/components/ui/emails-input";
-import { getAISuggestions } from "@/lib/ai-assistance";
-import type { AISuggestions } from "@/lib/ai-assistance";
+import { getObjectiveMeasurementsSuggestions } from "@/lib/ai-assistance";
+import type { ObjectiveMeasurementsOutput } from "@/types/ai-assistance";
 import { sendMarketingRequestEmail } from "@/lib/email";
 import { ArrowLeft, CheckCircle } from "lucide-react";
+import { demoData } from "./demo-data";
+import { ObjectiveMeasurementOptions } from "@/config/data";
 
 const marketingRequestSchema = z.object({
   background: z
@@ -67,7 +69,7 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiSuggestions, setAISuggestions] = useState<
-    Record<string, AISuggestions>
+    Record<string, ObjectiveMeasurementsOutput>
   >({});
   const { user } = useAuth();
 
@@ -88,61 +90,30 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
   });
 
   const handleAIAssistance = async (fieldName: string) => {
-    const formValues = watch();
-    const context = {
-      background: formValues.background,
-      objectives: formValues.objectives,
-    };
+    try {
+      const formValues = watch();
+      const input = {
+        context: formValues.background || "",
+        objectives: formValues.objectives || "",
+        measurements: formValues.measurement || [],
+      };
 
-    const suggestions = await getAISuggestions(context);
-    setAISuggestions((prev) => ({
-      ...prev,
-      [fieldName]: suggestions,
-    }));
+      const suggestions = await getObjectiveMeasurementsSuggestions(input);
+      setAISuggestions((prev) => ({
+        ...prev,
+        [fieldName]: suggestions,
+      }));
 
-    // Auto-select suggested options for better UX
-    const currentValue = watch("measurement") || [];
-    const newSelections = [
-      ...new Set([...currentValue, ...suggestions.suggestedOptions]),
-    ];
-    setValue("measurement", newSelections);
-  };
-
-  const demoData: MarketingRequestData = {
-    background:
-      "We're launching a new AI-powered project management tool and need to increase brand awareness among tech startups and small businesses. Our current market presence is limited, and we want to establish ourselves as a thought leader in the productivity space. The tool has unique features like smart task prioritization and automated workflow suggestions.",
-    objectives:
-      "1. Generate 500 qualified leads within 3 months\n2. Increase brand awareness by 40% in our target market\n3. Achieve 10,000 website visitors per month\n4. Build an email list of 2,000 subscribers\n5. Generate $50,000 in new revenue from the campaign",
-    measurement: [
-      "Lead Generation",
-      "Website Traffic",
-      "Brand Awareness",
-      "Conversion Rate",
-      "Email Open/Click Rates",
-    ],
-    ccEmails: [],
-    contactEmail: "demo@teampps.com.au",
-    targeting:
-      "Tech-savvy entrepreneurs and small business owners (25-45 years old) who manage teams of 5-50 people. They're looking for productivity solutions and are comfortable with cloud-based tools. Primary focus on startup hubs like San Francisco, Austin, and remote-first companies.",
-    examples:
-      "I really like how Notion does their content marketing - they create educational content that shows the product in action. Also impressed by Monday.com's user-generated content campaigns and how they showcase real customer success stories.",
-    exampleLinks: [
-      "https://notion.so/blog",
-      "https://monday.com/success-stories",
-    ],
-    actionSteps:
-      "See LinkedIn ad → Visit landing page → Download free productivity guide → Sign up for product demo → Start free trial → Convert to paid subscription",
-    activityType: "broader-campaign" as const,
-    preferredChannels: [
-      "LinkedIn Ads",
-      "Content Marketing",
-      "Email Marketing",
-      "Webinars",
-      "SEO",
-    ],
-    timeline: "3 months with potential to extend if successful",
-    budget:
-      "$25,000 total campaign budget ($15k for ads, $10k for content creation)",
+      // Auto-select suggested options for better UX
+      const currentValue = watch("measurement") || [];
+      const newSelections = [
+        ...new Set([...currentValue, ...suggestions.suggestedOptions]),
+      ];
+      setValue("measurement", newSelections);
+    } catch (error) {
+      console.error("Failed to get AI suggestions:", error);
+      // Could add user-facing error handling here if needed
+    }
   };
 
   const fillDemoData = () => {
@@ -357,17 +328,7 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                   </div>
                 </div>
                 <MultiSelect
-                  options={[
-                    "Conversion Rate",
-                    "Click-Through Rate (CTR)",
-                    "Lead Generation",
-                    "Brand Awareness",
-                    "Engagement Rate",
-                    "Revenue/Sales",
-                    "Website Traffic",
-                    "Social Media Metrics",
-                    "Email Open/Click Rates",
-                  ]}
+                  options={ObjectiveMeasurementOptions}
                   value={watch("measurement") || []}
                   onChange={(value) => setValue("measurement", value)}
                   placeholder="Select options..."
@@ -390,7 +351,7 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
               {/* CC Emails */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label>DO you want to copy anyone in review/comments?</Label>
+                  <Label>Do you want to copy anyone in review/comments?</Label>
                   <HelpButton
                     help={[
                       "Add email addresses of people you want to CC for review and comments",
