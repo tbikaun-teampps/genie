@@ -1,4 +1,4 @@
-import type { MarketingRequestEmailData } from "@/lib/email";
+import type { MarketingRequestEmailData } from "@/types/email";
 
 export const demoData: MarketingRequestEmailData = {
   background:
@@ -35,4 +35,6 @@ export const demoData: MarketingRequestEmailData = {
   timeline: "3 months with potential to extend if successful",
   budget:
     "$25,000 total campaign budget ($15k for ads, $10k for content creation)",
+  submittedBy: "demo@teampps.com.au",
+  submittedAt: new Date().toISOString(),
 };

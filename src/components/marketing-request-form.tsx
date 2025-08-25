@@ -118,7 +118,9 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
 
   const fillDemoData = () => {
     Object.entries(demoData).forEach(([key, value]) => {
-      setValue(key as keyof MarketingRequestData, value);
+      if (key in marketingRequestSchema.shape) {
+        setValue(key as keyof MarketingRequestData, value as any);
+      }
     });
   };
 
