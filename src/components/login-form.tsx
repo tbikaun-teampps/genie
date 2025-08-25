@@ -9,6 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { MicrosoftIcon } from "./microsoft-icon";
 
 export function LoginForm({
   className,
@@ -50,10 +52,20 @@ export function LoginForm({
 
             <Button 
               onClick={handleAzureLogin} 
-              className="w-full" 
+              className="w-full bg-[#0078d4] hover:bg-[#106ebe] text-white border-0 h-12 text-base font-medium" 
               disabled={azureLoading}
             >
-              {azureLoading ? "Redirecting..." : "Login with Microsoft"}
+              {azureLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Redirecting to Microsoft...
+                </>
+              ) : (
+                <>
+                  <MicrosoftIcon className="mr-2 h-5 w-5" />
+                  Continue with Microsoft
+                </>
+              )}
             </Button>
           </div>
         </CardContent>

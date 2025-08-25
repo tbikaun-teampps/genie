@@ -97,12 +97,6 @@ export function EmailsInput({
           Add
         </Button>
       </div>
-
-      {newEmail && !isValidEmail(newEmail) && (
-        <p className="text-xs text-gray-500">
-          💡 Tip: Enter a valid email address (e.g., name@example.com)
-        </p>
-      )}
     </div>
   );
 }
