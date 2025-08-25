@@ -1,19 +1,19 @@
-import { useState } from 'react'
-import type { KeyboardEvent } from 'react'
-import { X, Plus, Check } from 'lucide-react'
-import { Button } from './button'
-import { Input } from './input'
+import { useState } from "react";
+import type { KeyboardEvent } from "react";
+import { X, Plus, Check, Trash2 } from "lucide-react";
+import { Button } from "./button";
+import { Input } from "./input";
 
 interface MultiSelectProps {
-  options: string[]
-  value: string[]
-  onChange: (value: string[]) => void
-  placeholder?: string
-  allowCustom?: boolean
-  includeNotSure?: boolean
-  className?: string
-  suggestedOptions?: string[]
-  customSuggestions?: string[]
+  options: string[];
+  value: string[];
+  onChange: (value: string[]) => void;
+  placeholder?: string;
+  allowCustom?: boolean;
+  includeNotSure?: boolean;
+  className?: string;
+  suggestedOptions?: string[];
+  customSuggestions?: string[];
 }
 
 export function MultiSelect({
@@ -27,50 +27,50 @@ export function MultiSelect({
   suggestedOptions = [],
   customSuggestions = [],
 }: MultiSelectProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [customInput, setCustomInput] = useState("")
-  const [showCustomInput, setShowCustomInput] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [customInput, setCustomInput] = useState("");
+  const [showCustomInput, setShowCustomInput] = useState(false);
 
   const allOptions = [
     ...options,
     ...customSuggestions,
     ...(includeNotSure ? ["I'm not sure"] : []),
-  ]
+  ];
 
   const handleToggleOption = (option: string) => {
     if (value.includes(option)) {
-      onChange(value.filter(v => v !== option))
+      onChange(value.filter((v) => v !== option));
     } else {
-      onChange([...value, option])
+      onChange([...value, option]);
     }
-  }
+  };
 
   const handleAddCustom = () => {
     if (customInput.trim() && !value.includes(customInput.trim())) {
-      onChange([...value, customInput.trim()])
-      setCustomInput("")
-      setShowCustomInput(false)
+      onChange([...value, customInput.trim()]);
+      setCustomInput("");
+      setShowCustomInput(false);
     }
-  }
+  };
 
   const handleCustomInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleAddCustom()
-    } else if (e.key === 'Escape') {
-      setCustomInput("")
-      setShowCustomInput(false)
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddCustom();
+    } else if (e.key === "Escape") {
+      setCustomInput("");
+      setShowCustomInput(false);
     }
-  }
+  };
 
   const removeValue = (valueToRemove: string) => {
-    onChange(value.filter(v => v !== valueToRemove))
-  }
+    onChange(value.filter((v) => v !== valueToRemove));
+  };
 
   return (
     <div className={`relative ${className}`}>
       {/* Selected values display */}
-      <div 
+      <div
         className="min-h-[42px] w-full px-3 py-2 border border-gray-300 rounded-md focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent cursor-pointer bg-white"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -87,8 +87,8 @@ export function MultiSelect({
                 <button
                   type="button"
                   onClick={(e) => {
-                    e.stopPropagation()
-                    removeValue(item)
+                    e.stopPropagation();
+                    removeValue(item);
                   }}
                   className="hover:bg-blue-200 rounded-sm p-0.5"
                 >
@@ -104,16 +104,16 @@ export function MultiSelect({
       {isOpen && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
           {allOptions.map((option) => {
-            const isSuggested = suggestedOptions.includes(option)
-            const isCustomSuggestion = customSuggestions.includes(option)
-            const isNotSure = option === "I'm not sure"
-            
+            const isSuggested = suggestedOptions.includes(option);
+            const isCustomSuggestion = customSuggestions.includes(option);
+            const isNotSure = option === "I'm not sure";
+
             return (
               <div
                 key={option}
                 className={`flex items-center px-3 py-2 cursor-pointer ${
-                  isSuggested 
-                    ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-400" 
+                  isSuggested
+                    ? "bg-blue-50 hover:bg-blue-100 border-l-4 border-blue-400"
                     : isCustomSuggestion
                     ? "bg-purple-50 hover:bg-purple-100 border-l-4 border-purple-400"
                     : "hover:bg-gray-50"
@@ -121,7 +121,9 @@ export function MultiSelect({
                 onClick={() => handleToggleOption(option)}
               >
                 <div className="flex items-center justify-center w-4 h-4 mr-2 border border-gray-300 rounded">
-                  {value.includes(option) && <Check className="h-3 w-3 text-blue-600" />}
+                  {value.includes(option) && (
+                    <Check className="h-3 w-3 text-blue-600" />
+                  )}
                 </div>
                 <div className="flex-1">
                   <span className={isNotSure ? "italic text-gray-600" : ""}>
@@ -139,9 +141,23 @@ export function MultiSelect({
                   )}
                 </div>
               </div>
-            )
+            );
           })}
-          
+
+          {/* Clear all button */}
+          {value.length > 0 && (
+            <div className="border-t border-gray-200">
+              <button
+                type="button"
+                className="flex items-center w-full px-3 py-2 text-left hover:bg-gray-50 text-red-600"
+                onClick={() => onChange([])}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Clear all (this will remove custom options)
+              </button>
+            </div>
+          )}
+
           {allowCustom && (
             <div className="border-t border-gray-200">
               {!showCustomInput ? (
@@ -176,8 +192,8 @@ export function MultiSelect({
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setShowCustomInput(false)
-                        setCustomInput("")
+                        setShowCustomInput(false);
+                        setCustomInput("");
                       }}
                     >
                       Cancel
@@ -192,11 +208,8 @@ export function MultiSelect({
 
       {/* Backdrop to close dropdown */}
       {isOpen && (
-        <div
-          className="fixed inset-0 z-40"
-          onClick={() => setIsOpen(false)}
-        />
+        <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
       )}
     </div>
-  )
+  );
 }
