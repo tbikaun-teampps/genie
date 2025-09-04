@@ -56,6 +56,7 @@ const marketingRequestSchema = z.object({
   preferredChannels: z.array(z.string()).optional(),
   timeline: z.string().optional(),
   budget: z.string().optional(),
+  isLinkedInCampaign: z.boolean().optional(),
 });
 
 type MarketingRequestData = z.infer<typeof marketingRequestSchema>;
@@ -501,6 +502,32 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                     {errors.actionSteps.message}
                   </p>
                 )}
+              </div>
+
+              {/* LinkedIn Campaign Checkbox */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>LinkedIn Campaign</Label>
+                  <HelpButton
+                    help={[
+                      "Check this box if this marketing request will be part of a LinkedIn campaign",
+                    ]}
+                  />
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    id="isLinkedInCampaign"
+                    type="checkbox"
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    {...register("isLinkedInCampaign")}
+                  />
+                  <Label
+                    htmlFor="isLinkedInCampaign"
+                    className="text-sm font-normal flex-1"
+                  >
+                    This request will be part of a LinkedIn campaign
+                  </Label>
+                </div>
               </div>
 
               {/* Activity Type */}
