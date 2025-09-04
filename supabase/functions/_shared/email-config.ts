@@ -1,23 +1,26 @@
-// Check if we're in demo mode
-const DEMO_MODE = Deno?.env?.get("DEMO_MODE") === "true";
+// Email configuration with test mode support
 
 export const EMAIL_CONFIG = {
   TO_MARKETING_RECIPIENTS: [
-    "tbikaun@teampps.com.au"
-    // "talicia@teampps.com.au",
-    // "jolivier@teampps.com.au",
+    "talicia@teampps.com.au",
+    "jolivier@teampps.com.au",
   ],
   BCC_MARKETING_RECIPIENTS: ["tbikaun@teampps.com.au"],
   FROM_ADDRESS: "Genie AI <noreply@mail.teampps.com.au>",
   FORM_FROM_ADDRESS: "Genie Form <noreply@mail.teampps.com.au>",
-  
-  // Demo mode configuration
-  DEMO_MODE,
-  DEMO_TO_RECIPIENTS: ["tbikaun+demo@teampps.com.au"],
-  DEMO_BCC_RECIPIENTS: ["tbikaun+demo@teampps.com.au"],
-  
-  // Helper functions to get appropriate recipients
-  getToRecipients: () => DEMO_MODE ? EMAIL_CONFIG.DEMO_TO_RECIPIENTS : EMAIL_CONFIG.TO_MARKETING_RECIPIENTS,
-  getBccRecipients: () => DEMO_MODE ? EMAIL_CONFIG.DEMO_BCC_RECIPIENTS : EMAIL_CONFIG.BCC_MARKETING_RECIPIENTS,
-  getSubjectPrefix: () => DEMO_MODE ? "[DEMO] " : "",
+
+  // Test mode configuration
+  TEST_TO_RECIPIENTS: ["tbikaun+test@teampps.com.au"],
+  TEST_BCC_RECIPIENTS: ["tbikaun+test@teampps.com.au"],
+
+  // Helper functions to get appropriate recipients based on test flag
+  getToRecipients: (isTest = false) =>
+    isTest
+      ? EMAIL_CONFIG.TEST_TO_RECIPIENTS
+      : EMAIL_CONFIG.TO_MARKETING_RECIPIENTS,
+  getBccRecipients: (isTest = false) =>
+    isTest
+      ? EMAIL_CONFIG.TEST_BCC_RECIPIENTS
+      : EMAIL_CONFIG.BCC_MARKETING_RECIPIENTS,
+  getSubjectPrefix: (isTest = false) => (isTest ? "[TEST] " : ""),
 } as const;

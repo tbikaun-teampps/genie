@@ -380,11 +380,13 @@ async function sendActionPlanEmail(
     linkedInCaptions
   );
 
+  const isTest = formContent.test || false;
+
   const emailPayload = {
     from: EMAIL_CONFIG.FROM_ADDRESS,
-    to: EMAIL_CONFIG.getToRecipients(),
-    bcc: EMAIL_CONFIG.getBccRecipients(),
-    subject: `${EMAIL_CONFIG.getSubjectPrefix()}🤖 AI Marketing Action Plan${
+    to: EMAIL_CONFIG.getToRecipients(isTest),
+    bcc: EMAIL_CONFIG.getBccRecipients(isTest),
+    subject: `${EMAIL_CONFIG.getSubjectPrefix(isTest)}🤖 AI Marketing Action Plan${
       formContent.isLinkedInCampaign ? " + LinkedIn Content" : ""
     } - ${actionPlan.priority.toUpperCase()} Priority`,
     html: emailContent,

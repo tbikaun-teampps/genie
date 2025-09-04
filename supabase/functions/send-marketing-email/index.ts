@@ -100,6 +100,7 @@ interface MarketingRequestEmailData {
   isLinkedInCampaign?: boolean;
   submittedBy: string;
   submittedAt: string;
+  test?: boolean;
 }
 
 function generateEmailContent(
@@ -296,9 +297,9 @@ serve(async (req) => {
     // Generate AI summary of the form data
     console.log("Generating AI summary for marketing request with data:", data);
     console.log("Using EMAIL_CONFIG:", EMAIL_CONFIG);
-    if (EMAIL_CONFIG.DEMO_MODE) {
+    if (data.test) {
       console.log(
-        "🎭 DEMO MODE: Emails will be sent to demo recipients instead of real recipients"
+        "🧪 TEST MODE: Emails will be sent to test recipients instead of real recipients"
       );
     }
     const aiSummary = await generateFormSummary(data);
@@ -328,10 +329,10 @@ serve(async (req) => {
 
     const emailPayload = {
       from: EMAIL_CONFIG.FORM_FROM_ADDRESS,
-      to: EMAIL_CONFIG.getToRecipients(),
-      bcc: EMAIL_CONFIG.getBccRecipients(),
-      cc: EMAIL_CONFIG.DEMO_MODE ? [] : allCcEmails, // Skip CC emails in demo mode
-      subject: `${EMAIL_CONFIG.getSubjectPrefix()}${subjectPrefix}New Marketing Request: ${activityTypeText}`,
+      to: EMAIL_CONFIG.getToRecipients(data.test),
+      bcc: EMAIL_CONFIG.getBccRecipients(data.test),
+      cc: data.test ? [] : allCcEmails, // Skip CC emails in test mode
+      subject: `${EMAIL_CONFIG.getSubjectPrefix(data.test)}${subjectPrefix}New Marketing Request: ${activityTypeText}`,
       html: emailContent,
     };
 
@@ -386,53 +387,53 @@ serve(async (req) => {
       // Don't fail the main request if action plan fails
     }
 
-    // After AI action plan, send Teams notification (skip in demo mode)
-    // if (EMAIL_CONFIG.DEMO_MODE) {
-    //   console.log("🎭 DEMO MODE: Skipping Teams notification");
-    // } else {
-    //   try {
-    //     console.log("Sending Teams notification...");
+    // After AI action plan, send Teams notification (skip in test mode)
+    if (data.test) {
+      console.log("🧪 TEST MODE: Skipping Teams notification");
+    } else {
+      try {
+        console.log("Sending Teams notification...");
 
-    //     const teamsPayload = {
-    //       type: "marketing-request",
-    //       title: "New Marketing Request Submitted",
-    //       message: `A new ${data.activityType === "broader-campaign" ? "campaign" : "activity"} request has been submitted and processed with AI assistance.`,
-    //       formData: {
-    //         background: data.background,
-    //         objectives: data.objectives,
-    //         activityType: data.activityType,
-    //         submittedBy: data.submittedBy,
-    //         submittedAt: data.submittedAt,
-    //         targeting: data.targeting,
-    //         timeline: data.timeline,
-    //         budget: data.budget,
-    //         isLinkedInCampaign: data.isLinkedInCampaign,
-    //       },
-    //     };
+        const teamsPayload = {
+          type: "marketing-request",
+          title: "New Marketing Request Submitted",
+          message: `A new ${data.activityType === "broader-campaign" ? "campaign" : "activity"} request has been submitted and processed with AI assistance.`,
+          formData: {
+            background: data.background,
+            objectives: data.objectives,
+            activityType: data.activityType,
+            submittedBy: data.submittedBy,
+            submittedAt: data.submittedAt,
+            targeting: data.targeting,
+            timeline: data.timeline,
+            budget: data.budget,
+            isLinkedInCampaign: data.isLinkedInCampaign,
+          },
+        };
 
-    //     const teamsResponse = await fetch(
-    //       `${Deno.env.get("SUPABASE_URL")}/functions/v1/teams-webhook`,
-    //       {
-    //         method: "POST",
-    //         headers: {
-    //           "Content-Type": "application/json",
-    //           Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
-    //         },
-    //         body: JSON.stringify(teamsPayload),
-    //       }
-    //     );
+        const teamsResponse = await fetch(
+          `${Deno.env.get("SUPABASE_URL")}/functions/v1/teams-webhook`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+            },
+            body: JSON.stringify(teamsPayload),
+          }
+        );
 
-    //     if (teamsResponse.ok) {
-    //       console.log("Teams notification sent successfully");
-    //     } else {
-    //       const errorText = await teamsResponse.text();
-    //       console.error("Failed to send Teams notification:", errorText);
-    //     }
-    //   } catch (teamsError) {
-    //     console.error("Error sending Teams notification:", teamsError);
-    //     // Don't fail the main request if Teams notification fails
-    //   }
-    // }
+        if (teamsResponse.ok) {
+          console.log("Teams notification sent successfully");
+        } else {
+          const errorText = await teamsResponse.text();
+          console.error("Failed to send Teams notification:", errorText);
+        }
+      } catch (teamsError) {
+        console.error("Error sending Teams notification:", teamsError);
+        // Don't fail the main request if Teams notification fails
+      }
+    }
 
     return new Response(JSON.stringify({ success: true, data: result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

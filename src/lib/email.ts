@@ -5,10 +5,16 @@ export async function sendMarketingRequestEmail(
   data: MarketingRequestEmailData
 ) {
   try {
+    // Add test flag when in development environment
+    const requestData = {
+      ...data,
+      test: import.meta.env.DEV || data.test,
+    };
+
     const { data: result, error } = await supabase.functions.invoke(
       "send-marketing-email",
       {
-        body: data,
+        body: requestData,
       }
     );
 

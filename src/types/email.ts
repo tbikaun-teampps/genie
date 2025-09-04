@@ -16,5 +16,6 @@ export interface MarketingRequestEmailData {
   submittedBy: string;
   submittedAt: string;
   isLinkedInCampaign?: boolean;
+  test?: boolean;
 }
 
