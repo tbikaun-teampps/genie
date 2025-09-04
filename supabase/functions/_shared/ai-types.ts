@@ -60,6 +60,14 @@ export interface MarketingActionPlanResponse {
   budget_considerations: string[];
 }
 
+export interface LinkedInCaptionsResponse {
+  type: 'linkedin-captions';
+  captions: string[];
+  hashtags: string[];
+  posting_strategy: string;
+  engagement_tips: string[];
+}
+
 export interface GenericResponse {
   type: 'generic';
   message: string;
@@ -70,6 +78,7 @@ export type AIAssistanceResponse =
   | ObjectiveMeasurementsResponse 
   | FormSummarisationResponse 
   | MarketingActionPlanResponse 
+  | LinkedInCaptionsResponse
   | GenericResponse;
 
 // Error response type

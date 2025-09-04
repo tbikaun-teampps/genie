@@ -19,6 +19,7 @@ interface MarketingRequestData {
   targeting?: string;
   timeline?: string;
   budget?: string;
+  isLinkedInCampaign?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -87,9 +88,10 @@ Deno.serve(async (req) => {
                     {
                       title: "🎯 Activity Type:",
                       value:
-                        formData.activityType === "broader-campaign"
+                        (formData.activityType === "broader-campaign"
                           ? "📊 Broader Targeted Campaign"
-                          : "⚡ Once Off Activity",
+                          : "⚡ Once Off Activity") +
+                        (formData.isLinkedInCampaign ? " 📱 LinkedIn Campaign" : ""),
                     },
                     ...(formData.timeline
                       ? [

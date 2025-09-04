@@ -98,6 +98,7 @@ interface MarketingRequestEmailData {
   preferredChannels?: string[];
   timeline?: string;
   budget?: string;
+  isLinkedInCampaign?: boolean;
   submittedBy: string;
   submittedAt: string;
 }
@@ -118,6 +119,7 @@ function generateEmailContent(
     preferredChannels,
     timeline,
     budget,
+    isLinkedInCampaign,
     submittedBy,
     submittedAt,
   } = data;
@@ -159,6 +161,11 @@ function generateEmailContent(
           activityType === "broader-campaign"
             ? "📊 Broader Targeted Campaign"
             : "⚡ Once Off Activity"
+        }
+        ${
+          isLinkedInCampaign
+            ? ' <span style="background: #0077b5; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; margin-left: 10px;">📱 LinkedIn Campaign</span>'
+            : ""
         }
       </div>
 
@@ -390,6 +397,7 @@ serve(async (req) => {
           targeting: data.targeting,
           timeline: data.timeline,
           budget: data.budget,
+          isLinkedInCampaign: data.isLinkedInCampaign,
         },
       };
 
