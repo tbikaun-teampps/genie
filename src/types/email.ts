@@ -15,5 +15,6 @@ export interface MarketingRequestEmailData {
   budget?: string;
   submittedBy: string;
   submittedAt: string;
+  isLinkedInCampaign?: boolean;
 }
 

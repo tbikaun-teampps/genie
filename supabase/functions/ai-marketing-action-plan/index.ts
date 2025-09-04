@@ -43,42 +43,92 @@ async function callAnthropicAPI(
 }
 
 // Handler for LinkedIn captions generation
+// Handler for LinkedIn captions generation with improved reliability
 async function handleLinkedInCaptions(
   request: MarketingActionPlanRequest
-): Promise<LinkedInCaptionsResponse> {
+): Promise<LinkedInCaptionsResponse | null> {
   const systemPrompt = `You are a LinkedIn content specialist creating engaging post captions.
+
+CRITICAL: You MUST respond with ONLY valid JSON. No additional text, explanations, or markdown formatting.
 
 Based on the marketing request provided, create 3-4 draft LinkedIn post captions that would be relevant and engaging for the target audience.
 
-Respond with a JSON object containing:
-- captions: array of 3-4 LinkedIn post captions (each 100-300 characters)
-- hashtags: array of 5-8 relevant hashtags
-- posting_strategy: brief strategy note about when/how to post these
-- engagement_tips: 2-3 tips for maximizing engagement
+BUSINESS PERSONA:
+- Tone: Professional, candid, and confident. Speaking with authority from experience, direct, sharp (to the point) and value-driven. No "fluff" or salesy gimmicks, or overly technical language
+- Identity: Consulting and technology partner that challenges traditional approaches to the asset management industry, striving to drive change and bring technology forward
+- Audience: Senior Leaders to executives within asset-intensive industries. Decision makers who value efficiency, safety, productivity and profitability
+- Messaging Style: Bold, Insight-Led positioning TEAM as thought leaders reframing asset management, not just service providers
+- Outcome-Focused: Speak to results - clarity, capability, control, sustainable growth
+- Authentic: Leaning on lived experience and avoiding 'buzzwords'
+- Challenging but supportive: Courageous enough to question the status quo, but capable and connected to deliver lasting change and improvement
+- Focus on long-term partnerships, not just one-off projects
 
-Make captions professional yet engaging, suitable for LinkedIn's business-focused audience.`;
+RESPONSE FORMAT (STRICT JSON):
+{
+  "captions": ["caption1", "caption2", "caption3", "caption4"],
+  "hashtags": ["hashtag1", "hashtag2", "hashtag3", "hashtag4", "hashtag5"],
+  "posting_strategy": "strategy text here",
+  "engagement_tips": ["tip1", "tip2", "tip3"]
+}
 
-  const userMessage = `Create LinkedIn post captions based on this marketing request: ${JSON.stringify(
-    request.formContent,
-    null,
-    2
-  )}`;
+REQUIREMENTS:
+- Each caption must be 100-300 characters
+- Include 3-4 captions in the array
+- Include 5-8 relevant hashtags (without # symbol)
+- All captions MUST end with: "Your goals. Our TEAM. Let's go. teampps.com.au"
+- posting_strategy: One brief strategy note (single string)
+- engagement_tips: Array of 2-3 engagement tips (strings)
 
-  const aiResponse = await callAnthropicAPI(systemPrompt, userMessage, 800);
+Remember: Output ONLY the JSON object, nothing else.`;
+
+  const userMessage = `Create LinkedIn post captions based on this marketing request:
+${JSON.stringify(request.formContent, null, 2)}
+
+Respond with ONLY a JSON object following the exact structure specified.`;
 
   try {
-    const parsed = JSON.parse(aiResponse);
+    const aiResponse = await callAnthropicAPI(systemPrompt, userMessage, 1000);
+
+    // Clean the response to ensure it's valid JSON
+    const cleanedResponse = cleanJsonResponse(aiResponse);
+
+    // Parse the JSON with validation
+    const parsed = JSON.parse(cleanedResponse);
+
     return {
       type: "linkedin-captions",
-      captions: parsed.captions || [],
-      hashtags: parsed.hashtags || [],
-      posting_strategy: parsed.posting_strategy || "Post during business hours for maximum visibility",
-      engagement_tips: parsed.engagement_tips || [],
+      captions: parsed.captions,
+      hashtags: parsed.hashtags,
+      posting_strategy: parsed.posting_strategy,
+      engagement_tips: parsed.engagement_tips,
     };
   } catch (error) {
     console.error("Failed to generate LinkedIn captions:", error);
+    // Return null to indicate failure, email will show error message
     return null;
   }
+}
+
+// Helper function to clean JSON response
+function cleanJsonResponse(response: string): string {
+  // Remove any markdown code blocks
+  let cleaned = response.replace(/```json\n?/gi, "").replace(/```\n?/gi, "");
+
+  // Remove any leading/trailing whitespace
+  cleaned = cleaned.trim();
+
+  // Find the first { and last } to extract just the JSON object
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+
+  if (firstBrace !== -1 && lastBrace !== -1) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+
+  // Remove any potential BOM or zero-width characters
+  cleaned = cleaned.replace(/^\uFEFF/, "").replace(/\u200B/g, "");
+
+  return cleaned;
 }
 
 // Handler for marketing action plan
@@ -86,19 +136,31 @@ async function handleMarketingActionPlan(
   request: MarketingActionPlanRequest
 ): Promise<MarketingActionPlanResponse> {
   const isLinkedInCampaign = request.formContent.isLinkedInCampaign;
-  
+
   const systemPrompt = `You are a marketing strategist creating actionable marketing plans.
 
-  Based on the form content provided, create a comprehensive marketing action plan${isLinkedInCampaign ? ' with special focus on LinkedIn campaign strategies' : ''}.
+  Based on the form content provided, create a comprehensive marketing action plan${
+    isLinkedInCampaign
+      ? " with special focus on LinkedIn campaign strategies"
+      : ""
+  }.
   
   Respond with a JSON object containing:
-  - actionPlan: array of 4-6 specific actionable steps${isLinkedInCampaign ? ' (include LinkedIn-specific tactics)' : ''}
+  - actionPlan: array of 4-6 specific actionable steps${
+    isLinkedInCampaign ? " (include LinkedIn-specific tactics)" : ""
+  }
   - timeline: suggested timeline for implementation (e.g., "3-6 months")
-  - recommendations: array of 3-4 strategic recommendations${isLinkedInCampaign ? ' (emphasize LinkedIn best practices)' : ''}
+  - recommendations: array of 3-4 strategic recommendations${
+    isLinkedInCampaign ? " (emphasize LinkedIn best practices)" : ""
+  }
   - priority: "high", "medium", or "low" based on urgency
   - budget_considerations: array of 2-3 budget-related considerations
   
-  ${isLinkedInCampaign ? 'Since this is a LinkedIn campaign, prioritize LinkedIn-native strategies like thought leadership content, professional networking, B2B engagement, and LinkedIn advertising options.' : ''}
+  ${
+    isLinkedInCampaign
+      ? "Since this is a LinkedIn campaign, prioritize LinkedIn-native strategies like thought leadership content, professional networking, B2B engagement, and LinkedIn advertising options."
+      : ""
+  }
   
   Make recommendations specific and actionable based on the provided information.`;
 
@@ -138,7 +200,6 @@ async function handleMarketingActionPlan(
     };
   }
 }
-
 
 // Generate HTML email content for marketing action plan (with optional LinkedIn content)
 function generateActionPlanEmailContent(
@@ -236,7 +297,7 @@ function generateActionPlanEmailContent(
           }<br><br>
           <strong>Activity Type:</strong> ${
             formContent.activityType || "Not specified"
-          }${formContent.isLinkedInCampaign ? ' (LinkedIn Campaign)' : ''}
+          }${formContent.isLinkedInCampaign ? " (LinkedIn Campaign)" : ""}
         </div>
       </div>
 
@@ -252,7 +313,9 @@ function generateActionPlanEmailContent(
             ${linkedInCaptions.captions
               .map(
                 (caption, index) =>
-                  `<div class="caption-item"><strong>Caption ${index + 1}:</strong><br>"${caption}"</div>`
+                  `<div class="caption-item"><strong>Caption ${
+                    index + 1
+                  }:</strong><br>"${caption}"</div>`
               )
               .join("")}
           </div>
@@ -260,13 +323,17 @@ function generateActionPlanEmailContent(
           <div class="section">
             <div class="section-title">#️⃣ Suggested Hashtags</div>
             <div style="margin: 10px 0;">
-              ${linkedInCaptions.hashtags.map(tag => `<span class="hashtag">${tag}</span>`).join("")}
+              ${linkedInCaptions.hashtags
+                .map((tag) => `<span class="hashtag">${tag}</span>`)
+                .join("")}
             </div>
           </div>
 
           <div style="background: #ecfdf5; padding: 12px; border-radius: 6px; margin: 15px 0;">
             <strong style="color: #065f46;">📈 Posting Strategy:</strong>
-            <p style="margin: 5px 0 0 0;">${linkedInCaptions.posting_strategy}</p>
+            <p style="margin: 5px 0 0 0;">${
+              linkedInCaptions.posting_strategy
+            }</p>
           </div>
 
           <div class="section">
@@ -296,7 +363,6 @@ function generateActionPlanEmailContent(
   `;
 }
 
-
 // Send email with action plan (and LinkedIn content if applicable)
 async function sendActionPlanEmail(
   actionPlan: MarketingActionPlanResponse,
@@ -308,13 +374,19 @@ async function sendActionPlanEmail(
     return;
   }
 
-  const emailContent = generateActionPlanEmailContent(actionPlan, formContent, linkedInCaptions);
+  const emailContent = generateActionPlanEmailContent(
+    actionPlan,
+    formContent,
+    linkedInCaptions
+  );
 
   const emailPayload = {
     from: EMAIL_CONFIG.FROM_ADDRESS,
-    to: EMAIL_CONFIG.TO_MARKETING_RECIPIENTS,
-    bcc: EMAIL_CONFIG.BCC_MARKETING_RECIPIENTS,
-    subject: `🤖 AI Marketing Action Plan${formContent.isLinkedInCampaign ? ' + LinkedIn Content' : ''} - ${actionPlan.priority.toUpperCase()} Priority`,
+    to: EMAIL_CONFIG.getToRecipients(),
+    bcc: EMAIL_CONFIG.getBccRecipients(),
+    subject: `${EMAIL_CONFIG.getSubjectPrefix()}🤖 AI Marketing Action Plan${
+      formContent.isLinkedInCampaign ? " + LinkedIn Content" : ""
+    } - ${actionPlan.priority.toUpperCase()} Priority`,
     html: emailContent,
   };
 
@@ -357,7 +429,7 @@ Deno.serve(async (req) => {
     const response = await handleMarketingActionPlan(requestData);
 
     let linkedInCaptions: LinkedInCaptionsResponse | null = null;
-    
+
     // If this is a LinkedIn campaign, generate LinkedIn captions
     if (requestData.formContent.isLinkedInCampaign) {
       try {
@@ -371,14 +443,18 @@ Deno.serve(async (req) => {
 
     // Send email with the action plan (and LinkedIn content if applicable)
     try {
-      await sendActionPlanEmail(response, requestData.formContent, linkedInCaptions);
+      await sendActionPlanEmail(
+        response,
+        requestData.formContent,
+        linkedInCaptions
+      );
     } catch (emailError) {
       console.error("Failed to send action plan email:", emailError);
       // Don't fail the entire request if email fails
     }
 
     // Return response with LinkedIn captions if generated
-    const finalResponse = linkedInCaptions 
+    const finalResponse = linkedInCaptions
       ? { ...response, linkedInCaptions }
       : response;
 

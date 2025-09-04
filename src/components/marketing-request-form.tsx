@@ -234,6 +234,12 @@ export function MarketingRequestForm({ onBack }: MarketingRequestFormProps) {
                   {error}
                 </div>
               )}
+              
+              {import.meta.env.DEV && (
+                <div className="p-3 text-sm bg-blue-50 border border-blue-200 rounded-md text-blue-700">
+                  🎭 <strong>Demo Mode:</strong> Form submissions will be sent to test email addresses instead of real recipients.
+                </div>
+              )}
 
               {/* Background Information */}
               <div className="space-y-2">

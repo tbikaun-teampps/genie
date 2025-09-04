@@ -2,39 +2,43 @@ import type { MarketingRequestEmailData } from "@/types/email";
 
 export const demoData: MarketingRequestEmailData = {
   background:
-    "We're launching a new AI-powered project management tool and need to increase brand awareness among tech startups and small businesses. Our current market presence is limited, and we want to establish ourselves as a thought leader in the productivity space. The tool has unique features like smart task prioritization and automated workflow suggestions.",
+    "TEAM is positioning our technology-enhanced consulting services around our flagship products Vantage (asset management platform) and Axient (master data discovery and optimisation software) to senior leaders in asset-intensive industries. We need to cut through the noise of traditional consulting approaches and establish TEAM as the go-to partner for sustainable transformation in mining, utilities, and heavy industry. Our challenge is demonstrating ROI and long-term value over quick fixes.",
   objectives:
-    "1. Generate 500 qualified leads within 3 months\n2. Increase brand awareness by 40% in our target market\n3. Achieve 10,000 website visitors per month\n4. Build an email list of 2,000 subscribers\n5. Generate $50,000 in new revenue from the campaign",
+    "1. Generate 25 qualified leads from asset-intensive industry executives within 6 months\n2. Position TEAM as thought leaders challenging traditional asset management approaches\n3. Achieve 15% increase in website engagement from target decision-makers\n4. Secure 12 strategic discovery conversations with C-suite executives\n5. Generate $2M in pipeline opportunities from Vantage and Axient implementations",
   measurement: [
     "Lead Generation",
-    "Website Traffic",
-    "Brand Awareness",
-    "Conversion Rate",
-    "Email Open/Click Rates",
+    "Pipeline Value",
+    "Website Engagement",
+    "C-Suite Meeting Conversions",
+    "Brand Authority (Share of Voice)",
+    "Content Performance",
   ],
   ccEmails: [],
-  contactEmail: "demo@teampps.com.au",
+  contactEmail: "tbikaun+demo@teampps.com.au",
   targeting:
-    "Tech-savvy entrepreneurs and small business owners (25-45 years old) who manage teams of 5-50 people. They're looking for productivity solutions and are comfortable with cloud-based tools. Primary focus on startup hubs like San Francisco, Austin, and remote-first companies.",
+    "Senior executives and decision-makers (40-60 years old) in asset-intensive industries including mining, utilities, oil & gas, and manufacturing. They manage operations worth $100M+ and are responsible for safety, efficiency, and profitability outcomes. Focus on leaders who value evidence-based solutions and long-term partnerships over quick fixes.",
   examples:
-    "I really like how Notion does their content marketing - they create educational content that shows the product in action. Also impressed by Monday.com's user-generated content campaigns and how they showcase real customer success stories.",
+    "McKinsey's approach to industrial transformation content - they position as strategic partners, not just consultants. Also like how Accenture showcases specific industry outcomes with real metrics. Deloitte does well with executive-level thought leadership that challenges conventional thinking without being salesy.",
   exampleLinks: [
-    "https://notion.so/blog",
-    "https://monday.com/success-stories",
+    "https://www.mckinsey.com/industries/metals-and-mining",
+    "https://www.accenture.com/us-en/industries/utilities-index",
+    "https://www2.deloitte.com/global/en/industries/energy-and-resources.html",
   ],
   actionSteps:
-    "See LinkedIn ad → Visit landing page → Download free productivity guide → Sign up for product demo → Start free trial → Convert to paid subscription",
+    "See LinkedIn thought leadership post → Visit transformation insights page → Download industry benchmark report showcasing TEAM's superior delivery metrics → Register for executive briefing on 'Why Traditional Consulting Fails in Asset Management' → Book strategic advisory session → Engage in rapid value assessment using Vantage/Axient capabilities → Contract for transformation consulting with technology-accelerated delivery → Expand engagement based on demonstrated ROI",
   activityType: "broader-campaign" as const,
   preferredChannels: [
     "LinkedIn Ads",
     "Content Marketing",
     "Email Marketing",
+    "Industry Events",
     "Webinars",
-    "SEO",
+    "Executive Roundtables",
   ],
-  timeline: "3 months with potential to extend if successful",
+  timeline: "6 months initial campaign with 12-month strategic extension",
   budget:
-    "$25,000 total campaign budget ($15k for ads, $10k for content creation)",
-  submittedBy: "demo@teampps.com.au",
+    "$85,000 total campaign budget ($45k for targeted advertising, $25k for content creation, $15k for event sponsorships)",
+  submittedBy: "tbikaun+demo@teampps.com.au",
   submittedAt: new Date().toISOString(),
+  isLinkedInCampaign: true,
 };
